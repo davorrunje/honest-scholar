@@ -111,6 +111,12 @@ and the visual identity ([`docs/design/visual-identity.md`](docs/design/visual-i
 This record is intended to seed a blog post / paper explaining the skills and
 their rationale — ideally written *using* `scholar` itself.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). `scholar`'s own development uses
+`superpowers`; **using** `scholar` does not require it — engineering is delegated
+via the [engineering contract](resources/contracts/engineering.md).
+
 ## License
 
 [Apache-2.0](LICENSE).
