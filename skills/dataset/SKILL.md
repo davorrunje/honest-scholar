@@ -102,15 +102,18 @@ datasets:
     sensitivity: none                 # required if PII/confidential
 ```
 
-TODO (helper scripts, not yet written):
-- **`datasets.yml` loader/validator** — parse with `pyyaml`, validate the base
-  record + tier-conditional required fields, self-describing `sha256:` values.
-  *Interim:* load with `python -c` + `yaml.safe_load` and eyeball required fields
+**Tooling.** This is `honest_scholar/dataset/manifest.py`, exposed via
+`honest-scholar dataset validate` (loader/validator) and `honest-scholar dataset
+ingest|emit` (Croissant) — ensure via [`ensure-tooling`](../../resources/ensure-tooling.md);
+design in `../../docs/design/proposals/dataset-manifest-tooling.md` (issue #2).
+*Interim, until the module lands:*
+- **loader/validator** — load with `python -c` + `yaml.safe_load` and eyeball the
+  base record + tier-conditional required fields (self-describing `sha256:` values)
   against the table above.
-- **Croissant ingest/emit** — map registry fields ⇄ Croissant JSON-LD
-  (`name`, `license`, `citeAs`, `version`, `distribution[].contentUrl/.sha256`).
-  *Interim:* hand-map on register/export; keep the registry as the superset source
-  of truth, Croissant as an export format.
+- **Croissant ingest/emit** — hand-map registry fields ⇄ Croissant JSON-LD
+  (`name`, `license`, `citeAs`, `version`, `distribution[].contentUrl/.sha256`) on
+  register/export; keep the registry as the superset source of truth, Croissant as
+  an export format.
 
 ## Tiers
 
@@ -153,14 +156,19 @@ file failing verification is treated as absent and the chain continues:
   (remote name + type). CI uses env-var remotes from secrets. `rclone obscure` is
   **not** encryption — never commit it.
 
-TODO (helper scripts, not yet written):
-- **pooch Tier-B fetcher** — `pooch.retrieve(url, known_hash="sha256:…")` into the
-  content-addressed cache. *Interim:* `curl`/`wget` then `sha256sum` and manually
-  compare to the manifest before use.
-- **rclone wrappers** — `mirror` = `rclone copyto <local> mirror:base/sha256/<hash>`;
-  resolution step 2 = `rclone copyto mirror:base/sha256/<hash> <cache>` then re-hash;
-  `audit` may use `rclone check --download` when backend hash sets are disjoint.
-  *Interim:* run these `rclone` commands by hand with `--config .rclone/rclone.conf`.
+**Tooling.** The resolution chain is `honest_scholar/dataset/retrieval.py`, exposed
+via `honest-scholar dataset fetch|verify|mirror|audit` — ensure via
+[`ensure-tooling`](../../resources/ensure-tooling.md); design in
+`../../docs/design/proposals/dataset-retrieval-mirror-tooling.md` (issue #3). rclone
+is an optional external binary the wrappers shell out to, not a Python dep.
+*Interim, until the module lands:*
+- **Tier-B fetch** — `curl`/`wget` then `sha256sum` and manually compare to the
+  manifest before use (the module will use `pooch.retrieve(url, known_hash="sha256:…")`
+  into the content-addressed cache).
+- **rclone mirror** — run the commands by hand with `--config .rclone/rclone.conf`:
+  `mirror` = `rclone copyto <local> mirror:base/sha256/<hash>`; resolution step 2 =
+  `rclone copyto mirror:base/sha256/<hash> <cache>` then re-hash; `audit` may use
+  `rclone check --download` when backend hash sets are disjoint.
 
 ## Composition
 

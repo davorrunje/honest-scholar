@@ -64,9 +64,11 @@ carries provenance so any candidate can be traced to where it came from:
 - **frame** — `gap-spotting` or `problematization` (see Ranking).
 - **note** — for a dropped row, the recorded drop reason.
 
-> **TODO (supporting script).** A `backlog` helper to append/transition rows is
-> not yet written. **Interim:** edit the `backlog.md` table directly and keep the
-> column order above so `rank` and `progress` can parse it.
+> **Tooling.** Row append/transition is the `honest-scholar backlog
+> add|list|rank|promote|drop` CLI group (`honest_scholar/backlog/`) — ensure via
+> [`ensure-tooling`](../../resources/ensure-tooling.md) (issue #5); shared with
+> `paper-exploration`. **Interim, until it lands:** edit the `backlog.md` table
+> directly and keep the column order above so `rank` and `progress` can parse it.
 
 ## Generation moves
 

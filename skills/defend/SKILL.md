@@ -63,9 +63,11 @@ the author elects to stop and record the gap.
    Unanswered probes and any logged overrides are the accountability trail. If
    fired as a guardrail, follow Guardrail semantics.
 
-> **TODO (supporting script).** A `defend record` helper to append the
-> `understanding` frontmatter block and persist the transcript is not yet written
-> (issue #4). **Interim:** edit the artifact's frontmatter directly — set
+> **Tooling.** The record step is the `honest-scholar defend record` CLI command
+> (`honest_scholar/defend/record.py`) — ensure via
+> [`ensure-tooling`](../../resources/ensure-tooling.md); it appends the
+> `understanding` frontmatter block and persists the transcript (issue #4).
+> **Interim, until it lands:** edit the artifact's frontmatter directly — set
 > `understanding: {status: ok|gaps, unresolved: [...]}` to match the schema
 > `progress` reads (`../progress/SKILL.md`), and bump the artifact's top-level
 > `last-updated` (do **not** nest a date inside `understanding`). If a transcript
