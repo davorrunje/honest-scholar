@@ -1,0 +1,77 @@
+default_stages: [pre-commit, pre-merge-commit]
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+    -   id: trailing-whitespace
+        stages: [pre-commit, pre-merge-commit, manual]
+    -   id: end-of-file-fixer
+        stages: [pre-commit, pre-merge-commit, manual]
+    -   id: check-yaml
+        stages: [pre-commit, pre-merge-commit, manual]
+    -   id: check-added-large-files
+        stages: [pre-commit, pre-merge-commit, manual]
+
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v3.21.2
+    hooks:
+    -   id: pyupgrade
+        stages: [pre-commit, pre-merge-commit, manual]
+        args: [--py311-plus]
+
+-   repo: https://github.com/codespell-project/codespell
+    rev: v2.4.2
+    hooks:
+    -   id: codespell
+        stages: [pre-commit, pre-merge-commit, manual]
+        args: [--ignore-words=.codespell-whitelist.txt]
+        exclude: |
+            (?x)^(
+                scholar-tools/uv.lock
+            )$
+
+-   repo: local
+    hooks:
+    -   id: lint
+        name: Linter (ruff)
+        stages: [pre-commit, pre-merge-commit, manual]
+        entry: "tools/lint.sh"
+        language: system
+        types: [python]
+        pass_filenames: false
+        require_serial: true
+        verbose: true
+
+-   repo: local
+    hooks:
+    -   id: typecheck
+        name: Type check (mypy)
+        stages: [pre-commit, pre-merge-commit, manual]
+        entry: "tools/typecheck.sh"
+        language: system
+        types: [python]
+        pass_filenames: false
+        require_serial: true
+        verbose: true
+
+-   repo: local
+    hooks:
+    -   id: plugin-validate
+        name: Validate Claude plugin manifests
+        stages: [pre-commit, pre-merge-commit, manual]
+        entry: "tools/validate-plugin.sh"
+        language: system
+        files: ^\.claude-plugin/.*\.json$
+        pass_filenames: false
+        require_serial: true
+        verbose: true
+
+-   repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+    -   id: detect-secrets
+        args: [
+            '--baseline', '.secrets.baseline',
+        ]
+        exclude: scholar-tools/uv.lock
+        stages: [pre-commit, pre-merge-commit, manual]

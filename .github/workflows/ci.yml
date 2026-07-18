@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  pre-commit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v8.3.1
+      - name: Sync scholar-tools (lint group)
+        run: uv sync --project scholar-tools --group lint
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit|${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Run pre-commit
+        run: uv run --project scholar-tools --group lint pre-commit run --hook-stage manual --all-files
+
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v8.3.1
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Sync
+        run: uv sync --project scholar-tools --python ${{ matrix.python-version }}
+      - name: Lint
+        working-directory: scholar-tools
+        run: uv run ruff check .
+      - name: Type check
+        working-directory: scholar-tools
+        run: uv run mypy
+      - name: Test
+        working-directory: scholar-tools
+        run: uv run pytest
+
+  plugin-validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate plugin manifests
+        run: ./tools/validate-plugin.sh
+
+  check:
+    if: always()
+    runs-on: ubuntu-latest
+    permissions: {}
+    needs: [pre-commit, test, plugin-validate]
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1 # nosemgrep
+        with:
+          jobs: ${{ toJSON(needs) }}

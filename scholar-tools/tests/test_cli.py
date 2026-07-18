@@ -1,0 +1,51 @@
+"""CLI smoke tests for the ``scholar`` Typer app."""
+
+from __future__ import annotations
+
+from typer.testing import CliRunner
+
+from scholar_tools import __version__
+from scholar_tools.cli import app
+
+runner = CliRunner()
+
+
+def test_version() -> None:
+    result = runner.invoke(app, ["--version"])
+    assert result.exit_code == 0
+    assert __version__ in result.stdout
+
+
+def test_help_lists_groups() -> None:
+    result = runner.invoke(app, ["--help"])
+    assert result.exit_code == 0
+    for group in ("literature", "dataset", "defend", "backlog"):
+        assert group in result.stdout
+
+
+def test_doctor_runs() -> None:
+    result = runner.invoke(app, ["doctor"])
+    assert result.exit_code == 0
+    assert "python" in result.stdout.lower()
+    assert "rclone" in result.stdout.lower()
+    assert "uv" in result.stdout.lower()
+
+
+def test_stub_command_exits_2() -> None:
+    result = runner.invoke(app, ["literature", "resolve", "10.1000/xyz"])
+    assert result.exit_code == 2
+    assert "not yet implemented" in result.stdout
+    assert "scholar#1" in result.stdout
+
+
+def test_each_group_has_a_stub() -> None:
+    cases = [
+        (["dataset", "fetch", "mnist"], "scholar#3"),
+        (["defend", "record", "claim"], "scholar#4"),
+        (["backlog", "add", "idea"], "scholar#5"),
+    ]
+    for args, issue in cases:
+        result = runner.invoke(app, args)
+        assert result.exit_code == 2
+        assert "not yet implemented" in result.stdout
+        assert issue in result.stdout
