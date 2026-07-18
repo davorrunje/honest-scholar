@@ -58,6 +58,11 @@ lint = [
     "detect-secrets==1.5.0",
 ]
 
+[tool.uv]
+# `uv sync` installs these groups by default (locally and in CI), so ruff/mypy/
+# pytest are present without extra flags. Mirrors mononet.
+default-groups = ["dev", "lint"]
+
 [tool.hatch.build.targets.sdist]
 include = ["scholar_tools"]
 
