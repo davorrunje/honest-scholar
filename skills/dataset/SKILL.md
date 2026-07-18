@@ -56,10 +56,13 @@ conclusion, or promote a tier because a mirror exists — those are out of scope
 | `fetch` | Materialize via the resolution chain (cache → mirror → source → gated). Hard-fail on any SHA-256 mismatch. |
 | `verify` | Recompute SHA-256 of on-disk files vs. the manifest; report `verified-against-registry`. Never downloads. |
 | `mirror` | Populate/refresh the private rclone mirror under content-addressed keys (`sha256/<hash>`); re-hash after transfer. |
-| `audit` | Fixity + presence + license/datasheet completeness across the entire manifest; report gaps. |
+| `audit` | Fixity + presence + license/datasheet completeness **+ tier↔(access, redistributable) consistency** across the entire manifest; report gaps. |
+| `export` | Emit a Croissant JSON-LD file for a venue (e.g. NeurIPS D&B) from a registry entry; the registry stays the source of truth (CLI: `dataset emit`). |
 
 Composed: `fetch` = resolve + verify + mirror-populate; `audit` = `verify` across
-every entry plus schema/license/datasheet completeness.
+every entry plus schema/license/datasheet/tier completeness. **Croissant ingest**
+rides inside `register` (bootstrap an entry from a published Croissant); **emit** is
+the standalone `export` verb.
 
 ## Manifest
 
@@ -70,7 +73,9 @@ light posture). Each entry extends the shared substrate base asset record.
 
 Required **core** fields (every tier): `id`, `version`, `tier`, `license` (SPDX
 id or explicit terms + URL), `redistributable` (bool), `access` (`open`|`gated`),
-`files[]` (each `path` + `sha256`), `datasheet` (path/URL; may be `"N/A + reason"`).
+`files[]` (each `path` + `sha256`), `datasheet` (path/URL; **required** — a
+`"N/A + reason"` placeholder is permitted only as an explicit, `audit`-flagged
+deficiency, never a clean state).
 Additionally: `source`/`retrieval` required for **Tier B**; acquisition
 `instructions` required for **Tier C**; `sensitivity` required if PII/confidential.
 
@@ -193,6 +198,11 @@ is an optional external binary the wrappers shell out to, not a Python dep.
   (ADR-0010; FAIR A1.2/A2: metadata stays open even when bytes are gated.)
 - **Human confirms tier + license on register.** The skill proposes; the researcher
   decides. Tier/license is a judgement, not an automation.
+- **Tier must stay consistent with its inputs.** `tier` is
+  `f(redistributable × access)`; a human confirms it but is not free to contradict
+  the license. `audit` flags any entry whose `tier` disagrees with its
+  `(access, redistributable)` fields (e.g. `tier: A` + `access: gated`, or `tier: A`
+  + `redistributable: false`).
 - **SHA-256 mismatch is a hard fail** at every hop — never return or count
   unverified bytes. Never trust a backend-reported hash alone.
 - **Tier C is verify-only** — print acquisition instructions and wait for an

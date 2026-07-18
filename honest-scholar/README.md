@@ -35,7 +35,8 @@ Pre-releases are on TestPyPI (`--index-url https://test.pypi.org/simple/
 honest-scholar --version
 honest-scholar doctor                                        # environment report (implemented)
 honest-scholar literature resolve|cites|refs|enrich|neighbors   # issue #1
-honest-scholar dataset    register|fetch|verify|mirror|audit    # issues #2 / #3
+honest-scholar dataset    validate|ingest|emit                    # issue #2
+honest-scholar dataset    fetch|verify|mirror|audit               # issue #3
 honest-scholar defend     record                                # issue #4
 honest-scholar backlog    add|list|rank|promote|drop            # issue #5
 ```
