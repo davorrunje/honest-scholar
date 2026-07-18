@@ -64,10 +64,32 @@ the author elects to stop and record the gap.
    fired as a guardrail, follow Guardrail semantics.
 
 > **TODO (supporting script).** A `defend record` helper to append the
-> `understanding` frontmatter block and persist the transcript is not yet
-> written. **Interim:** edit the artifact's frontmatter directly (add
-> `understanding:` with `status`, `date`, `unresolved:` list) and, if a
-> transcript is kept, write it beside the artifact as `defend-<date>.md`.
+> `understanding` frontmatter block and persist the transcript is not yet written
+> (issue #4). **Interim:** edit the artifact's frontmatter directly — set
+> `understanding: {status: ok|gaps, unresolved: [...]}` to match the schema
+> `progress` reads (`../progress/SKILL.md`), and bump the artifact's top-level
+> `last-updated` (do **not** nest a date inside `understanding`). If a transcript
+> is kept, write it beside the artifact as `defend-<date>.md`.
+
+## Example (a methodology probe)
+
+> **defend** *(target `methodology`, critical-examiner):* "Your abstract says the
+> intervention had *no effect*, and `strategy.md` rests that on a non-significant
+> p. Why isn't that enough — and what would be?"
+> **author:** "…because p was above 0.05?"
+> **defend** *(gap: treats a non-significant p as evidence of no effect — a settled
+> error, so teach hard):* "Absence of evidence isn't evidence of absence — a
+> non-significant p can just mean low power. To claim *no effect* you test whether
+> the effect sits **inside** a pre-set equivalence bound (a TOST). See
+> `../../resources/references/understanding-and-defense.md`. What bound would you
+> pre-register, and does the data fall inside it?"
+> **author:** "…±0.2σ, and yes, both one-sided tests reject outside it."
+> **defend** *(holds — can state what TOST buys and its bound):* records
+> `understanding: {status: ok, unresolved: []}`.
+
+The AI never says "your claim is wrong"; it surfaces that a *method* was misapplied
+(a settled error) and teaches the fix. A *novel-claim* probe instead teaches how to
+reason and defend, and cites — never the claim's answer.
 
 ## Targets
 
@@ -135,8 +157,9 @@ Chosen by three **author-controllable** levers, never inferred:
 
 1. **Self-selected** (default) — the author picks.
 2. **Task/stage-suggested** — a suggested default keyed to the visible
-   artifact/stage (early draft → sounding board; near-submission → examiner);
-   always overridable; keyed to the *work*, never the *person*.
+   artifact/stage (read from the artifact's stage/frontmatter: early draft →
+   sounding board; near-submission → examiner); always overridable; keyed to the
+   *work*, never the *person*.
 3. **Feedback-calibrated** — adjusts to explicit author feedback ("too harsh" /
    "push harder").
 
@@ -148,9 +171,9 @@ forbidden** — it is unsupported (the learning-styles myth) and a consent/agenc
 violation. Rule: *match the voice to the task and the author's stated choice,
 never to an inferred personality.*
 
-## Guardrails / constraints
+## Hard constraints
 
-Hard rules — these are the load-bearing constraints, not preferences.
+Load-bearing rules, not preferences.
 
 - **Ask, don't grade substance.** Report observed facts ("you could not explain
   X," "no answer to the falsification probe"), never "you are wrong about X" — a
@@ -172,14 +195,16 @@ Hard rules — these are the load-bearing constraints, not preferences.
   (treating a contested choice as an error) violates agency.
 - **Calibrate depth to stakes.** Hardest on the method carrying the central
   claim. "Enough" = the author can state what it buys, its key
-  assumption/limitation, and an answer to the one canonical critique.
+  assumption/limitation, and an answer to the one canonical critique — sourced,
+  for a method, from the digests/authoritative refs; for a novel claim, from the
+  most likely reviewer objection (the closest prior work or a rival explanation).
 - **Anti-Goodhart.** Reward *articulable understanding*, not checklist or ritual
   completion. The `defend` skill must not become its own ritual; no scores, no
   pass/fail, no productivity number.
 - **Firewall + agency.** The `defend` skill produces evidence the human acts on;
-  it never adjudicates a claim, decides a verdict, or hard-blocks. The human
-  decides and signs off (`../../docs/design/00-meta-spec.md` §2.1; lifecycle §6,
-  `../../docs/design/01-lifecycle.md`).
+  it never adjudicates a claim or decides a verdict — the human decides and signs
+  off (`../../docs/design/00-meta-spec.md` §2.1). Guardrail behavior (stop / offer
+  / logged override): see *Guardrail semantics* above.
 
 ## Commit attribution
 
