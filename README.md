@@ -100,8 +100,13 @@ The design is captured in three complementary layers:
   with the options considered and the **rejected alternatives and why**.
 - **Reference digests** — the *evidence*: [`resources/references/`](resources/references/)
   — verified primary-source digests behind each skill and principle.
+- **Open proposals (drafts)** — [`docs/design/proposals/`](docs/design/proposals/):
+  first-draft specs for the not-yet-built supporting scripts and for cross-repo
+  thesis aggregation, pending discussion.
 
-Visual identity: [`docs/design/visual-identity.md`](docs/design/visual-identity.md).
+Also: the [User Guide](docs/USER-GUIDE.md), the commit-attribution / discovery
+convention ([`resources/commit-attribution.md`](resources/commit-attribution.md)),
+and the visual identity ([`docs/design/visual-identity.md`](docs/design/visual-identity.md)).
 
 This record is intended to seed a blog post / paper explaining the skills and
 their rationale — ideally written *using* `scholar` itself.

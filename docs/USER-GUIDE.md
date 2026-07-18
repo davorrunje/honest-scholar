@@ -1,0 +1,316 @@
+<!-- scholar user guide -->
+
+# scholar — User Guide
+
+A hands-on guide for a researcher meeting `scholar` for the first time. It walks
+you from install to a signed finding to a submitted paper, using one running
+example throughout. It is practical: every step is a command you type and a file
+you fill in.
+
+For the *why* behind the design, read [`README.md`](../README.md) and the specs
+under [`docs/design/`](design/); this guide is the *how*.
+
+## 1. What scholar is (and the two rules it runs on)
+
+`scholar` is a Claude Code plugin for the **scientific** side of research — idea →
+literature → hypothesis → test → publish-decision → paper → (optional) thesis. It
+is the counterpart to `superpowers`, which handles the *engineering* (design,
+plans, code); `scholar` calls out to `superpowers` for all of that rather than
+reimplementing it.
+
+Everything you do sits under two rules. They are not decoration — they change how
+the skills behave at every step:
+
+1. **Agency — you decide and sign off.** The skills draft, keep the accounts, and
+   advise like a colleague. They never make a *material* scientific decision for
+   you: whether a hypothesis is confirmed or refuted, whether a result is real,
+   whether a paper is worth publishing, whether a thesis is defensible. Each of
+   those is recorded in the artifact with a **named human sign-off + date**. You
+   cannot "run" scholar to produce a paper — you drive it. In practice: expect the
+   skill to stop at every judgement point and ask you.
+
+2. **Understanding — grill verifies and teaches.** Before any material decision,
+   the [`grill`](../skills/grill/SKILL.md) skill probes whether you can actually
+   defend the claim, the cited work, and the method — Socratically, one question
+   at a time. When it finds a gap it *teaches* (source-grounded), then re-asks. It
+   never grades the substance of your novel claim; it makes sure you understand
+   what you are signing. In practice: expect to be asked "why this method?" and
+   "what would falsify this?" before you sign anything.
+
+Between them sits the **firewall**: exploration *proposes* candidates, resolution
+*disposes* (tests to a verdict), synthesis *reports*. No single skill both
+proposes a claim and adjudicates it.
+
+## 2. Install
+
+`scholar` is distributed as a Claude Code plugin; its repo is its own marketplace.
+
+```
+/plugin marketplace add davorrunje/scholar
+/plugin install scholar@scholar
+```
+
+To enable it for a whole project (so collaborators get it on trust), add to the
+consuming repo's `.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "scholar": { "source": { "source": "github", "repo": "davorrunje/scholar" } }
+  },
+  "enabledPlugins": { "scholar@scholar": true }
+}
+```
+
+Commit that file and every collaborator gets the same skills auto-enabled. Pin a
+release with `"ref": "v0.0.0"` inside the marketplace `source` for a fixed
+version. Skills are invoked by name (`research-init`, `hypothesis-testing`, …) in
+your Claude Code session.
+
+## 3. First-time setup: `research-init`
+
+Onboard your repo once with [`research-init`](../skills/research-init/SKILL.md).
+It has **two modes**, both landing the repo in the same layout:
+
+- **`init`** — a greenfield repo with no research artifacts yet.
+- **`adopt`** — an existing repo that already has reference PDFs, a bibliography,
+  dataset files or download scripts, and prior results scattered around. `adopt`
+  runs `init`, then inventories those assets and proposes how to map them in —
+  you confirm every material call (licenses, dataset tiers, which old result maps
+  to which hypothesis). This is the payoff for a sprawling, unsystematic folder.
+
+```
+research-init init          # new repo
+research-init adopt         # backfill an existing one
+```
+
+Both scaffold the **consumer layout** (git-native plain text — markdown, YAML,
+CSL-JSON; the repo is the source of truth):
+
+```
+docs/research/
+  papers.md                 # registry: paper-id → root + experiment-backend binding
+  <paper>/
+    hypotheses/<YYYY-MM-DD-slug>/{hypothesis,strategy,design,plan,findings}.md
+    backlog.md              # this paper's hypothesis backlog
+    paper/{pitch,positioning,outline,ledger,decision}.md + sections/
+  portfolio-backlog.md      # paper-level backlog
+  thesis/                   # OPTIONAL — only for a thesis repo
+  dashboard.md              # GENERATED from status frontmatter — never hand-edit
+  literature/
+    references.json         # CSL-JSON bibliography (source of truth)
+    triage.yml              # decision sidecar: role, disposition, rationale
+datasets.yml                # dataset registry (entries + checksums + tiers + license)
+.scholar/
+  config.yml                # rclone remote, literature anchors, experiment-backend binding
+  rclone.conf.example       # committed template; real rclone.conf is gitignored
+```
+
+Registries are created **empty but valid**. `research-init` does not commit — it
+leaves the scaffolding staged for you to review. It is idempotent: re-running
+fills gaps, never overwrites. After onboarding, you register individual items
+with the capability skills' own verbs, not with `research-init`.
+
+## 4. The core loop — a worked walkthrough
+
+Running example: a project studying **whether a learned data-augmentation policy
+improves out-of-distribution accuracy** for an image classifier. We will take one
+hypothesis from raw idea to a signed verdict, then roll it into a paper.
+
+### 4a. Explore hypotheses (propose)
+
+[`hypothesis-exploration`](../skills/hypothesis-exploration/SKILL.md) runs an
+idea pipeline into the paper's `backlog.md`. Its verbs form a small state machine:
+`park → generate → rank → promote | drop`.
+
+```
+hypothesis-exploration park "learned aug policy may help OOD but hurt in-distribution"
+hypothesis-exploration generate      # from literature scout, EDA, or the generation moves
+hypothesis-exploration rank          # score by EIG, feasibility × interest; flag framing
+hypothesis-exploration promote <id>  # scaffold a hypothesis folder, hand to testing
+```
+
+Every backlog row carries **mandatory provenance** (where the idea came from —
+a scouted citing-context snippet, an EDA observation, or `own`). A hypothesis
+must be a *falsifiable sentence*, not a topic: "a learned augmentation policy
+raises OOD top-1 accuracy by ≥2 points at equal in-distribution accuracy." `rank`
+advises; it never auto-selects. `drop` records a reason and retires the row — it
+never deletes it (file-drawer discipline). This skill **only proposes**; you
+promote.
+
+### 4b. Test one hypothesis (dispose)
+
+`promote` hands the claim to
+[`hypothesis-testing`](../skills/hypothesis-testing/SKILL.md), the resolve skill.
+Its governing rule is **science before engineering**: you settle *how* you would
+confirm or refute the claim before any code is designed. It drives four staged
+documents, in order, under `docs/research/<paper>/hypotheses/<slug>/`:
+
+1. **`hypothesis.md`** — the claim, why it matters, what confirming vs. refuting
+   looks like. No method yet.
+2. **`strategy.md`** — *the science.* The decisive comparison and decision rule;
+   at least one **rival explanation** plus a test that separates it; the
+   **rigor-kit** choices (confirmatory-vs-exploratory tag, power/MDE, severity,
+   TOST bounds if the claim is a null). It calls `literature position` for an
+   adversarial "would a reviewer say this is already known?" check, and declares
+   the datasets it needs. **`grill` fires here** on the strategy — expect to
+   defend your assumptions and falsifiers before moving on.
+3. **`design.md` / `plan.md`** — *the engineering, delegated to `superpowers`*
+   (`brainstorming → writing-plans`). scholar stores the results here but does
+   not design experiments or write code itself. Executing the plan produces the
+   runs.
+4. **`findings.md`** — *the verdict:* `confirmed | refuted | inconclusive`, tied
+   to the strategy's decision rule. Results are cited as backend **run-refs**,
+   never hand-typed numbers. Before you sign, the **guardrail grill fires**: it
+   surfaces any gap; you may override, but the override is logged.
+
+The verdict is a material decision — it is real only once `signed-off-by` +
+`signed-off-date` are set. And **refuted is done, not failed**: learning the
+claim is false is successful science.
+
+### 4c. Where literature and datasets plug in
+
+- [`literature`](../skills/literature/SKILL.md) has two modes over one
+  citation-graph engine (OpenAlex + Semantic Scholar). `scout` looks outward
+  (mines who-cited-whom for leads → ranked backlog rows with provenance);
+  `position` looks inward (defends a committed claim → an adversarial precedent
+  verdict at hypothesis level, a full related-works synthesis with a PRISMA-style
+  audit log and baseline list at paper level). A `--level` parameter tunes depth.
+  It keeps the `references.json` + `triage.yml` registry; it **proposes and
+  surfaces, never adjudicates novelty**.
+
+  ```
+  literature scout --level hypothesis      # feeds hypothesis-exploration
+  literature position --level hypothesis   # feeds strategy.md
+  ```
+
+- [`dataset`](../skills/dataset/SKILL.md) manages the data your strategy declares:
+  verbs `init / register / fetch / verify / mirror / audit` over `datasets.yml`.
+  Each dataset gets a storage **tier** (A committed / B auto-retrievable / C
+  gated), a **SHA-256 fingerprint** (authoritative; a mismatch is a hard fail),
+  and a Gebru **datasheet**. You confirm tier and license — the skill proposes.
+
+  ```
+  dataset register imagenet-c            # add an entry; confirm tier + license
+  dataset fetch imagenet-c               # materialize + verify against the registry
+  ```
+
+### 4d. How runs become evidence — the experiment-backend contract
+
+scholar defines a **contract**; your repo supplies the implementation (bound in
+`.scholar/config.yml`, named per paper in `papers.md`). The contract has four
+capabilities:
+
+| Capability | What it gives you |
+|---|---|
+| `run` | execute/resume an experiment for a config → a **run-ref** (the citable unit of evidence) |
+| `evidence` | results for a run-ref + a provenance stamp (config hash, code, dataset `id+version+sha256`, hardware) |
+| `tables` | render result blocks into your docs — the **only** writer of numbers |
+| `is-current` | is a run-ref's evidence still valid, or stale (with reasons)? |
+
+Because every number resolves to an exact `id+version+sha256`, results are
+reproducible and staleness is honest. You never hand-copy a number: `findings.md`
+cites run-refs, and `tables` writes the figures. `is-current` reports staleness;
+**you** decide whether to re-run.
+
+## 5. Papers: from candidate to publish decision
+
+The paper level mirrors the hypothesis level one step up.
+
+- [`paper-exploration`](../skills/paper-exploration/SKILL.md) proposes *candidate
+  papers* into `portfolio-backlog.md` — via generation lenses (mechanism-transfer,
+  limitation-driven, result-driven) and optionally `literature scout --level
+  paper`. Same verbs (`park/generate/rank/promote/drop`), same firewall.
+  `promote` registers the paper in `papers.md` (assigning its `paper-id` and
+  experiment-backend binding) and hands it to synthesis.
+
+  ```
+  paper-exploration generate
+  paper-exploration promote aug-policy-robustness
+  ```
+
+- [`paper-synthesis`](../skills/paper-synthesis/SKILL.md) develops the committed
+  paper through staged docs: **pitch → positioning → outline/plan → decision →
+  sections**. `positioning.md` (via `literature position --level paper`) gives the
+  taxonomy, concept matrix, PRISMA log, and baseline list. Section prose is
+  assembled from a **claim→evidence ledger** (`ledger.md`) where each row is a
+  Toulmin sextet (claim / grounds / warrant / backing / qualifier / rebuttal) and
+  **grounds cite run-refs**. The **`decision.md`** publish/no-go verdict is a
+  material, human-signed decision, gated by a grill over positioning + cited-work +
+  claims. A **no-go reads as done, not failed.**
+
+## 6. Thesis (optional)
+
+Only for a doctoral thesis-by-publication — a plain portfolio repo omits this
+level entirely. [`thesis`](../skills/thesis/SKILL.md) is one skill with two modes:
+
+- **`framing` (occasional)** — set the **aims** and the narrative through-line,
+  and map which portfolio papers compose the thesis (`docs/research/thesis/aims.md`).
+- **`synthesis`** — assemble the **kappa** (the Nordic framing chapter that binds
+  the papers; introduces *no new findings*) and clear the **defensibility gate**.
+
+Defensibility is the highest-stakes decision, so its gate is escalated: before you
+sign, `grill` runs a full **mock viva** across all three targets, and you must
+acknowledge *each* surfaced gap in writing (per-gap sign-off, not one blanket
+override). Done = every aim covered by ≥1 paper **and** the kappa states a
+coherent through-line. Never a paper count.
+
+## 7. Cross-cutting: progress and grill
+
+- [`progress`](../skills/progress/SKILL.md) is **read-only reporting**. `status
+  <level> [id]` rolls up state; `dashboard` regenerates `docs/research/dashboard.md`
+  as a pure projection of each artifact's status frontmatter (never hand-edit it).
+
+  ```
+  progress status hypothesis            # where do all hypotheses stand?
+  progress dashboard                    # regenerate the dashboard
+  ```
+
+  Roll-up is **semantic, not arithmetic**: it surfaces coverage and blockers, never
+  a percentage. A single refuted *load-bearing* hypothesis blocks its paper — an
+  average would hide that. **A refuted hypothesis reads as done/green.** There are
+  no scores, ever — that is a hard design invariant, not a missing feature.
+
+- [`grill`](../skills/grill/SKILL.md) is the Socratic tutor-examiner. It is
+  **self-invoked** on demand (grill me on this claim / cited work / method) and
+  fires **automatically as a guardrail** before every material sign-off. It probes,
+  teaches on a gap, and re-probes; it targets `claim | cited-work | methodology`.
+  It offers author-selectable **mentor personas** — *sounding board*, *critical
+  examiner* (default), *directive editor*, opt-in *devil's advocate* — chosen by
+  you or suggested by the stage, **never inferred from your personality**. It
+  teaches established knowledge freely but never supplies the answer key to your
+  novel claim.
+
+  ```
+  grill claim <hypothesis-id>           # rehearse before you sign
+  ```
+
+## 8. Everyday tips
+
+- **What scholar will NOT do.** It will not make a material decision for you
+  (confirm/refute, publish/no-go, defensible), will not write your paper
+  unattended, will not hand-copy result numbers, and will not produce a
+  productivity score. Every judgement point stops and asks.
+- **Trust the firewall.** If a skill refuses to test a claim it also generated, or
+  refuses to adjudicate its own decision, that is by design — use the paired
+  skill.
+- **Commits are attributed.** Commits made via scholar skills carry a discovery
+  trailer, so provenance of an automated change is visible in `git log`. scholar
+  never auto-commits `research-init` scaffolding — you review and commit.
+- **Evidence is run-refs, not numbers.** If a number can't be traced to a run-ref,
+  it doesn't go in a findings doc or a paper section.
+- **Follow-ups become issues.** Deferred checks and known gaps become
+  self-contained GitHub issues, not `TODO`s buried in a doc.
+- **Where the reasoning lives.** Specs (the *what*) in [`docs/design/`](design/);
+  decision log with rejected alternatives (the *why*) in
+  [`decisions/`](../decisions/); verified source digests (the *evidence*) in
+  [`resources/references/`](../resources/references/); fillable staged-doc
+  skeletons in [`resources/templates/`](../resources/templates/).
+
+---
+
+**The shortest possible path:** `research-init` → `hypothesis-exploration
+promote` → `hypothesis-testing` (strategy, grilled → delegate design/plan →
+sign findings) → `paper-exploration promote` → `paper-synthesis` (positioning →
+sign decision → sections) → `progress dashboard`. You drive every arrow; scholar
+keeps the accounts and makes sure you can defend each signature.
