@@ -66,6 +66,11 @@ state and refuses illegal moves):
 `park` and `add` never rank; `promote` and `drop` are terminal and **never delete**
 a row (file-drawer discipline — `../01-lifecycle.md` §3).
 
+A read-only **`list`** companion (`honest-scholar backlog list [--level L] [--status S]`)
+prints matching rows and mutates nothing — the everyday inspection command, the
+backlog analog of `progress status`. It performs no transition, so it sits outside
+the transition table above.
+
 **Provenance preservation.** The helper copies the origin verbatim and never
 paraphrases. For a scout-seeded row it stores the `source-paper-id` **plus** the
 citing-context snippet returned by `literature scout` (grounding:

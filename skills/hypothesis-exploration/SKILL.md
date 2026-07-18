@@ -65,10 +65,13 @@ carries provenance so any candidate can be traced to where it came from:
 - **note** — for a dropped row, the recorded drop reason.
 
 > **Tooling.** Row append/transition is the `honest-scholar backlog
-> add|list|rank|promote|drop` CLI group (`honest_scholar/backlog/`) — ensure via
+> park|add|list|rank|promote|drop` CLI group
+> (`honest_scholar/exploration/backlog.py`) — ensure via
 > [`ensure-tooling`](../../resources/ensure-tooling.md) (issue #5); shared with
-> `paper-exploration`. **Interim, until it lands:** edit the `backlog.md` table
-> directly and keep the column order above so `rank` and `progress` can parse it.
+> `paper-exploration`. `add` realizes the `generate` verb's row-append; `list` is a
+> read-only inspection command. **Interim, until it lands:** edit the `backlog.md`
+> table directly and keep the column order above so the `backlog` verbs (`rank`,
+> `promote`, `list`) can parse it.
 
 ## Generation moves
 
@@ -111,7 +114,8 @@ are **advisory inputs to the human's ordering**, not an automatic gate.
 - **Expected information gain (EIG)** — how much a resolved verdict would move
   belief *regardless of direction*. High EIG discriminates between live rival
   explanations; a foregone-conclusion test is low-EIG even if easy. This is the
-  primary axis (per the migrated hypothesis-exploration spec).
+  primary ranking axis (the flywheel selects for belief-moving tests —
+  `../../docs/design/01-lifecycle.md` §1).
 - **Feasibility × Interest** (Alon 2009,
   `../../resources/references/citation-scouting.md` §5) — feasibility: can it be
   tested with the data, backends, and time on hand; interest: does the answer
@@ -146,9 +150,12 @@ testing slate.
   stage** of testing (`defend` on `strategy`: assumptions, entailments,
   falsifiers, rival explanations — `../../skills/defend/SKILL.md`). Exploration
   does not examine; it hands off a claim clean enough to be defended later.
-- **Progress.** Backlog counts and states feed `progress` as coverage and
-  blockers, never a score — a large backlog or many dropped rows is not "bad"
-  (`../../docs/design/00-meta-spec.md` §3.6).
+- **Progress.** Only *promoted* items become artifacts (`hypothesis.md` +
+  downstream), and those carry the status frontmatter `progress` rolls up — the
+  `backlog.md` table itself is **not** projected into the dashboard (`progress`
+  reads artifact frontmatter, not the backlog). Backlog depth stays visible in
+  `backlog.md` directly; a large backlog or many dropped rows is not "bad" and is
+  never scored (`../../docs/design/00-meta-spec.md` §3.6).
 
 ## Guardrails
 
