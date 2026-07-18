@@ -7,15 +7,18 @@
 ---
 
 **`scholar`** is the *scientific* counterpart to
-[`superpowers`](https://github.com/) (which handles *engineering*): a uniform,
+[`superpowers`](https://github.com/obra/superpowers) (which handles *engineering*): a uniform,
 git-native Claude Code plugin for the whole research lifecycle — idea → literature
 → hypothesis → test → publish-decision → paper → thesis — so a researcher and
 their collaborators work the same way and re-derive neither the workflow nor its
 rigor per project.
 
-> **Status: early / work in progress.** The design is complete and recorded (see
-> [Design & reasoning](#design--reasoning)); the skills are being implemented. See
-> [`STATUS.md`](STATUS.md) for exactly what is done, stubbed, or pending.
+> **New here?** Start with the **[User Guide](docs/USER-GUIDE.md)**.
+>
+> **Status: `v0.0.0`, early.** The design is complete and recorded (see
+> [Design & reasoning](#design--reasoning)); the skills are a first cut with some
+> supporting-script TODOs. See [`STATUS.md`](STATUS.md) for exactly what is done,
+> stubbed, or pending.
 
 ## Two guiding principles
 
