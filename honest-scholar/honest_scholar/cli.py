@@ -12,6 +12,7 @@ import json
 import platform
 import shutil
 import subprocess  # nosec B404 - used only to read `--version` of trusted tools
+import sys
 from pathlib import Path
 from typing import Annotated
 
@@ -19,6 +20,7 @@ import typer
 
 from honest_scholar import __version__
 from honest_scholar.dataset import manifest as manifest_mod
+from honest_scholar.defend import record as record_mod
 from honest_scholar.exploration import backlog as backlog_mod
 
 app = typer.Typer(
@@ -298,13 +300,86 @@ defend = typer.Typer(help="Defensibility record helpers.", no_args_is_help=True)
 app.add_typer(defend, name="defend")
 
 
-@defend.command()
-def record(claim: str) -> None:
-    """Record a defensibility entry for a claim or decision.
+def _parse_acks(acks: str) -> list[dict[str, str]]:
+    """Parse ``"gap::by||gap2::by2"`` into per-gap acknowledgement dicts."""
+    result: list[dict[str, str]] = []
+    for item in filter(None, (a.strip() for a in acks.split("||"))):
+        gap, _, by = item.partition("::")
+        result.append({"gap": gap.strip(), "by": by.strip()})
+    return result
 
-    :param claim: The claim or decision to record.
+
+@defend.command()
+def record(
+    artifact: Annotated[
+        str, typer.Option("--artifact", help="Target markdown artifact.")
+    ],
+    target: Annotated[
+        str, typer.Option("--target", help="claim | cited-work | methodology.")
+    ],
+    gaps: Annotated[
+        str, typer.Option("--gaps", help="Observed gap facts, '||'-separated.")
+    ] = "",
+    signed_off_by: Annotated[str, typer.Option("--signed-off-by")] = "",
+    override: Annotated[bool, typer.Option("--override")] = False,
+    acks: Annotated[
+        str, typer.Option("--acks", help="Per-gap sign-offs, 'gap::name||…'.")
+    ] = "",
+    transcript: Annotated[
+        str, typer.Option("--transcript", help="Transcript file, or '-' for stdin.")
+    ] = "",
+    log_dir: Annotated[str, typer.Option("--log-dir")] = str(
+        record_mod.DEFAULT_LOG_DIR
+    ),
+) -> None:
+    """Record a ``defend`` examination: patch understanding + append the log.
+
+    Writes ``status.understanding`` into the artifact frontmatter and appends the
+    outcome to the accountability log. Records observed facts only — never a
+    verdict, score, or answer key.
+
+    :param artifact: The examined markdown artifact.
+    :param target: ``claim`` / ``cited-work`` / ``methodology``.
+    :param gaps: Observed gap facts, ``||``-separated (empty means no gaps).
+    :param signed_off_by: Named human; required when gaps are waved through.
+    :param override: A blanket logged override of the surfaced gaps.
+    :param acks: Per-gap acknowledgements, ``gap::name``, ``||``-separated.
+    :param transcript: Transcript file path, or ``-`` for stdin.
+    :param log_dir: Directory for the accountability log.
+    :raises typer.Exit: Code 1 on a guard violation or malformed artifact.
     """
-    _not_implemented(4)
+    gap_list = [g.strip() for g in gaps.split("||") if g.strip()]
+    transcript_text: str | None = None
+    if transcript == "-":
+        transcript_text = sys.stdin.read()
+    elif transcript:
+        transcript_text = Path(transcript).read_text(encoding="utf-8")
+    try:
+        result = record_mod.record(
+            artifact,
+            target,
+            gap_list,
+            signed_off_by=signed_off_by or None,
+            override=override,
+            acknowledgements=_parse_acks(acks),
+            transcript=transcript_text,
+            log_dir=log_dir,
+        )
+    except (record_mod.RecordError, OSError) as exc:
+        typer.echo(f"defend record failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(
+        json.dumps(
+            {
+                "outcome": result.outcome,
+                "artifact": str(result.artifact),
+                "log_entry": str(result.log_entry),
+                "transcript": str(result.transcript) if result.transcript else None,
+            },
+            indent=2,
+        )
+    )
+    raise typer.Exit(code=0)
 
 
 # --- backlog (honest-scholar#5) ---------------------------------------------------
