@@ -18,7 +18,7 @@ cognitive load, not just tidying one repo.
 ## Considered options
 
 1. **Standalone Claude Code plugin repo** (`scholar`), mononet as one consumer.
-2. Keep skills in `mononet/docs/superpowers/` (in-repo only).
+2. Keep the skills in-repo (mononet) only.
 3. A shared internal snippet library copied per repo.
 
 ## Decision

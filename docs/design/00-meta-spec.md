@@ -67,9 +67,11 @@ and
   make material scientific decisions, and the workflow cannot be "run" to
   produce a paper or thesis unattended. The researcher drives (see §2.1).
 - **No engineering workflow.** Design, planning, implementation, debugging, and
-  test authoring are delegated to **`superpowers`** (brainstorming →
-  writing-plans → implementation). `scholar` calls out to them; it does not
-  reimplement them. This boundary is deliberate and load-bearing.
+  test authoring are delegated to the bound **engineering backend** via the
+  engineering-delegation contract (`resources/contracts/engineering.md`;
+  capabilities `design` / `plan` / `implement`, bound per project in
+  `.scholar/config.yml` as `engineering_backend:`). `scholar` calls out to it; it
+  does not reimplement it. This boundary is deliberate and load-bearing.
 - **No domain assumptions.** Nothing monotonic-network- or even
   ML-specific ships in the plugin. Domain content is supplied by the consuming
   repo as config and data.
@@ -89,10 +91,11 @@ and
 
 ## 2. Identity & scope
 
-`scholar` is the **scientific** counterpart to `superpowers` (engineering).
+`scholar` covers the **scientific** workflow; the *engineering* is delegated to
+the bound engineering backend via the engineering-delegation contract.
 Its unit of work is a *scientific claim* and its lifecycle; its outputs are
 hypotheses, evidence, decisions, and papers. Everything that is "how do I build
-the thing that produces the evidence" is `superpowers`' job.
+the thing that produces the evidence" is the engineering backend's job.
 
 ### 2.1 Core principle — assistant, not researcher
 
@@ -237,13 +240,14 @@ mirrored staged-doc discipline at every level — plus **`thesis`** (the
 third-level skill: `framing` + `synthesis`, per §3.1). The `thesis` skill is
 optional and only used by thesis repos.
 
-### 3.3 Shared capabilities (3)
+### 3.3 Shared capabilities (3) & delegation contracts
 
 | Capability | Form | Ships where | Consumer supplies |
 |---|---|---|---|
 | `literature` | one skill, modes `scout` (generative → idea backlog) / `position` (defensive → related-works, PRISMA log) | **plugin** | anchors, API config |
 | `dataset` | one skill, verbs `init/register/fetch/verify/mirror/audit` | **plugin** (engine) | `datasets.yml` entries, blobs, mirror creds |
 | experiment backend | a **contract** (run / evidence / tables / is-current) | **plugin** (contract only) | the implementation, bound per project |
+| engineering backend | a **contract** (`design` / `plan` / `implement`) | **plugin** (contract only) | the implementation, bound per project as `engineering_backend:` |
 
 `scout`/`position` and the dataset verbs each take a `level` (or `mode`)
 parameter that tunes ranking / depth / stopping — the level split is a
@@ -376,7 +380,8 @@ scholar/                                  # plugin repo root
 │   └── grill/SKILL.md                    # claim|cited-work|methodology; self + guardrail (cross-cutting)
 ├── resources/                            # cross-skill shared material
 │   ├── contracts/
-│   │   └── experiment-backend.md         # the 4-capability contract
+│   │   ├── experiment-backend.md         # the 4-capability contract
+│   │   └── engineering.md                # design / plan / implement delegation contract
 │   ├── substrate/
 │   │   └── asset-registry.md             # spine schema; mirror/fixity/ID conventions
 │   ├── templates/                        # staged-doc templates (both levels) + registries
@@ -422,7 +427,7 @@ the experiment-backend implementation. After `init`/`adopt`, a consumer repo
 ├── datasets.yml                          # dataset registry (entries + checksums + tiers)
 ├── .datasets-cache/                      # gitignored materialized data
 ├── .scholar/
-│   ├── config.yml                        # rclone remote name, lit anchors, backend binding
+│   ├── config.yml                        # rclone remote name, lit anchors, experiment-backend + engineering_backend bindings
 │   ├── rclone.conf                       # gitignored (creds)
 │   └── rclone.conf.example               # committed template (remote name/type only)
 └── <experiment-backend implementation>   # e.g. mononet's benchmark orchestration (PR #127)
@@ -439,7 +444,8 @@ plus an inventory-and-map phase.
 
 - **`init` (greenfield)** — scaffold the `docs/research/` layout, the registries
   (`papers.md`, `datasets.yml`, `references.bib` + `triage.yml`), `.scholar/`
-  config (rclone remote name, literature anchors, experiment-backend binding),
+  config (rclone remote name, literature anchors, experiment-backend +
+  engineering-backend bindings),
   and the staged-doc templates. Delegates per-item registration to the
   capability skills' own verbs rather than reimplementing them.
 - **`adopt` (backfill)** — inventory an existing repo, propose mappings,
@@ -530,7 +536,7 @@ implementation plans, then the plugin repo is created and `mononet` adopts it.
   Drive + S3 via rclone) vs SHA-256 (stronger, but disjoint backend hash sets);
   resolve in sub-spec 3/4.
 - **`.scholar/` vs existing conventions** — confirm the config directory name
-  and that it does not collide with `superpowers`/repo conventions.
+  and that it does not collide with existing repo conventions.
 - **Thesis milestone schema** — the shape of `milestones.yml` (institution
   gates are time-boxed and vary); keep configurable, resolve in sub-spec 1.
 

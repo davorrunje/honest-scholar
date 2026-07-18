@@ -3,13 +3,14 @@
 **Date:** 2026-07-17 · **Status:** first proposal (text/SVG). A browser-companion
 pass (`/design consent`) can later render mockups; this establishes the direction.
 
-`scholar` is the *scientific* counterpart to `superpowers`. Its identity should
+`scholar` covers the *scientific* workflow (engineering is delegated to a bound
+engineering backend via the engineering-delegation contract). Its identity should
 read **scholarly, rigorous, and calm** — a trusted mentor/colleague, not a flashy
 product. Lowercase, understated, typographic; the opposite of hype.
 
 ## Name & wordmark
 
-- **Name:** `scholar` (always lowercase, like `superpowers`).
+- **Name:** `scholar` (always lowercase).
 - **Wordmark:** the word set in a humanist **serif** (scholarship, print, the
   paper), lowercase. Optional bracket motif around it — `[ scholar ]` — nodding to
   citations. See `assets/wordmark.svg`.

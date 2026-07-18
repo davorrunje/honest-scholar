@@ -54,8 +54,9 @@ Staged docs, in order:
    confirm/refute, rival hypotheses + discriminating tests, the rigor-kit choices
    (§4). Calls `literature position --level hypothesis` (adversarial precedent
    rapid-review: "would a reviewer say this is already known?").
-3. **design.md / plan.md** — the *engineering*, **delegated to `superpowers`**
-   (brainstorming → writing-plans), stored under the hypothesis folder.
+3. **design.md / plan.md** — the *engineering*, **delegated to the bound
+   engineering backend** via the engineering-delegation contract
+   (`design` → `plan`), stored under the hypothesis folder.
 4. **findings.md** — results (citing backend **run-refs**, never hand-copied
    numbers) + the **verdict** (confirmed / refuted / inconclusive), which is a
    **material decision recorded with a named human sign-off** (§2.1).
@@ -78,7 +79,8 @@ prioritization (from the migrated `2026-07-15-paper-exploration` spec). Defines 
 Staged docs: **pitch → positioning → outline/plan → decision → sections**.
 - **positioning.md** — related-works synthesis via `literature position --level
   paper` (taxonomy + concept matrix + PRISMA log + per-branch delta + baselines).
-- **outline/plan** — engineering of the paper structure, delegated to `superpowers`.
+- **outline/plan** — engineering of the paper structure, delegated to the bound
+  engineering backend via the engineering-delegation contract.
 - **decision.md** — the **publish / no-go verdict**, a material decision with a
   named human sign-off, gated on accumulated hypothesis evidence + positioning
   (the paper-level mirror of a hypothesis `findings` verdict).
@@ -195,8 +197,9 @@ every one.
 
 - **Plugin:** the five pipeline skills + `progress` + `grill`; staged-doc + kappa
   templates; the rigor kit; the firewall/flywheel logic; the persona set. Depends
-  only on the capability contracts (experiment backend, `literature`, `dataset`)
-  and delegates engineering to `superpowers`.
+  only on the capability contracts (experiment backend, engineering backend,
+  `literature`, `dataset`) and delegates engineering to the bound engineering
+  backend via the engineering-delegation contract.
 - **Consumer:** all `docs/research/` content; the `papers.md` bindings; the
   experiment-backend implementation; `.scholar/` config.
 
@@ -205,8 +208,9 @@ every one.
 - **Thesis defensibility gate** — *resolved (ADR-0021):* non-blocking, but with
   per-gap acknowledged sign-off (heavier than the single-override used at other
   gates).
-- **`design.md`/`plan.md` delegation seam** — the exact handoff to `superpowers`
-  brainstorming/writing-plans (store paths under the hypothesis folder).
+- **`design.md`/`plan.md` delegation seam** — the exact handoff to the engineering
+  backend's `design` / `plan` capabilities (store paths under the hypothesis
+  folder).
 - **Ledger format** — the Toulmin-sextet schema for `paper/ledger`; settle in the
   plan.
 - **Status frontmatter schema** — the exact fields feeding `progress` roll-up.

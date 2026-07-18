@@ -1,6 +1,6 @@
 ---
 name: hypothesis-testing
-description: Use when driving one promoted hypothesis from a claim to a signed verdict — the resolve skill at the hypothesis level. Runs the staged pipeline hypothesis → strategy → design/plan → findings, does the SCIENCE (strategy, rigor, verdict) and delegates the ENGINEERING to superpowers. Invoke when a backlog item is promoted, or when returning to an in-flight hypothesis folder.
+description: Use when driving one promoted hypothesis from a claim to a signed verdict — the resolve skill at the hypothesis level. Runs the staged pipeline hypothesis → strategy → design/plan → findings, does the SCIENCE (strategy, rigor, verdict) and delegates the ENGINEERING to the bound engineering backend. Invoke when a backlog item is promoted, or when returning to an in-flight hypothesis folder.
 ---
 
 # Hypothesis Testing
@@ -12,8 +12,9 @@ confirmed / refuted / inconclusive — backed by cited experimental evidence.
 **Core principle — SCIENCE BEFORE ENGINEERING.** The scientific thinking (how you
 would confirm or refute the claim, what rival explanations exist, which rigor
 choices apply) is settled in `strategy.md` *before* any code is designed. Only
-then is the engineering — design, plan, implementation — delegated to
-`superpowers`. This skill does not do engineering.
+then is the engineering — design, plan, implementation — delegated to the bound
+engineering backend via the engineering-delegation contract. This skill does not
+do engineering.
 
 It also honors the two governing principles:
 
@@ -66,11 +67,12 @@ order**. Each carries a status frontmatter block that feeds
      surfaced gaps before proceeding to engineering. See
      [`../grill/SKILL.md`](../grill/SKILL.md).
 
-3. **`design.md` / `plan.md`** — *the engineering, delegated.* Hand off to
-   `superpowers`: **brainstorming → writing-plans**. Store the resulting design and
-   plan under this hypothesis folder (`design.md`, `plan.md`). `scholar` does not
-   design experiments, write plans, or implement — it composes with `superpowers`
-   for all of that. Execution of the plan produces the runs.
+3. **`design.md` / `plan.md`** — *the engineering, delegated.* Hand off to the
+   bound engineering backend via the engineering-delegation contract: its
+   `design` → `plan` capabilities. Store the resulting design and plan under this
+   hypothesis folder (`design.md`, `plan.md`). `scholar` does not design
+   experiments, write plans, or implement — it composes with the engineering
+   backend for all of that. Execution of the plan produces the runs.
 
 4. **`findings.md`** — *the verdict, a material decision.*
    - Report results by citing the experiment backend's **run-refs** — **never**
@@ -140,8 +142,9 @@ live in [`../../resources/rigor/`](../../resources/rigor/); the *why* is grounde
   strategy stage (adversarial precedent review).
 - [`dataset`](../dataset/SKILL.md) — materialize, verify, and datasheet every
   declared dataset.
-- **`superpowers`** — `brainstorming` → `writing-plans` (and implementation) for the
-  `design.md`/`plan.md` stage. All engineering lives here (ADR-0002).
+- The bound **engineering backend** — `design` → `plan` (and `implement`) for the
+  `design.md`/`plan.md` stage, via the engineering-delegation contract. All
+  engineering lives here (ADR-0002, refined by ADR-0023).
 - The bound **experiment backend** — `run` / `evidence` / `tables` / `is-current`.
 - [`grill`](../grill/SKILL.md) — strategy target (during strategy) and guardrail
   (before the findings sign-off).
@@ -160,8 +163,8 @@ live in [`../../resources/rigor/`](../../resources/rigor/); the *why* is grounde
 - **Refuted is done, not failed.** Verdict and readiness are distinct axes; a
   refuted claim is a successful result. Do not treat it as a red mark or bury it —
   file-drawer discipline forbids that.
-- **Don't do engineering here.** Delegate design/plan/implementation to
-  `superpowers`; this skill owns only the scientific stages.
+- **Don't do engineering here.** Delegate design/plan/implementation to the bound
+  engineering backend; this skill owns only the scientific stages.
 - **Stay behind the firewall.** This skill resolves; it does not generate
   candidate hypotheses, and it does not adjudicate without the researcher's recorded
   decision.

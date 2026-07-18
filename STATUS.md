@@ -9,7 +9,8 @@ This file is the honest ledger of what is **done**, **drafted**, or **pending**.
 instruction files** (`skills/*/SKILL.md`) plus templates, contracts, and the
 migrated design record. There is intentionally little heavy Python — skills
 orchestrate existing tools (git, gh, rclone, curl→OpenAlex/Semantic Scholar,
-pandoc) and delegate engineering to `superpowers`.
+pandoc) and delegate engineering to the bound engineering backend via the
+engineering-delegation contract.
 
 ## Done
 
@@ -54,7 +55,7 @@ pandoc) and delegate engineering to `superpowers`.
   (tracked: scholar#1–5, mononet#132). Currently each skill uses an interim
   tool-orchestrated approach.
 - Plan-time open items from the sub-specs (ledger schema, status-frontmatter
-  fields, `.scholar/` naming, thesis-milestone schema, the `superpowers`
+  fields, `.scholar/` naming, thesis-milestone schema, the engineering-backend
   delegation seam).
 - Reconcile with PR #128's four earlier research-workflow reference docs in
   `mononet` (superseded by this repo — close/repoint).

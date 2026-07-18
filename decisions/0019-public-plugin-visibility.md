@@ -12,7 +12,8 @@ author now decides, the broader research community.
 
 - Reach: share the methodology as widely as possible.
 - The plugin is already domain-neutral by design (no ML/monotonic assumptions).
-- Named counterpart to `superpowers` (engineering) — `scholar` (science).
+- Sharp, science-only identity — `scholar` covers the science; engineering is
+  delegated to a bound engineering backend via a contract.
 
 ## Considered options
 

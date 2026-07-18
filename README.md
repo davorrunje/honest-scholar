@@ -6,12 +6,12 @@
 
 ---
 
-**`scholar`** is the *scientific* counterpart to
-[`superpowers`](https://github.com/obra/superpowers) (which handles *engineering*): a uniform,
-git-native Claude Code plugin for the whole research lifecycle — idea → literature
-→ hypothesis → test → publish-decision → paper → thesis — so a researcher and
-their collaborators work the same way and re-derive neither the workflow nor its
-rigor per project.
+**`scholar`** is a uniform, git-native Claude Code plugin for the *scientific*
+research workflow — idea → literature → hypothesis → test → publish-decision →
+paper → thesis — so a researcher and their collaborators work the same way and
+re-derive neither the workflow nor its rigor per project. The *engineering* is
+delegated to a bound **engineering backend** via the engineering-delegation
+contract, so `scholar` stays domain- and tool-neutral.
 
 > **New here?** Start with the **[User Guide](docs/USER-GUIDE.md)**.
 >
@@ -50,8 +50,8 @@ A single object×action shape at **three nested levels**:
 | **thesis** (optional top) | `thesis` (framing) | `thesis` (synthesis) |
 
 Each resolve skill drives one candidate through **science-before-engineering**
-staged documents, delegating the *engineering* (design, plans, code) to
-`superpowers`.
+staged documents, delegating the *engineering* (design, plans, code) to the bound
+engineering backend via the engineering-delegation contract.
 
 **Shared capabilities:** `literature` (scout/position over the citation graph;
 CSL-JSON bib + a decision triage sidecar), `dataset` (tiered registry + private

@@ -35,7 +35,7 @@ feeding the `progress` roll-up (`../progress/SKILL.md`). The pipeline, in order:
 |---|---|---|---|
 | pitch | `pitch.md` | the paper's thesis, contribution, and target venue — the committed framing carried over from the backlog | `hypothesis.md` |
 | positioning | `positioning.md` | related-works synthesis: where this paper sits and what its delta is | `strategy.md` |
-| outline / plan | `outline.md` / `plan.md` | the manuscript **structure** — engineering, **delegated to `superpowers`** | `design.md` / `plan.md` |
+| outline / plan | `outline.md` / `plan.md` | the manuscript **structure** — engineering, **delegated to the bound engineering backend** | `design.md` / `plan.md` |
 | decision | `decision.md` | the **publish / no-go verdict** — a material decision with a named human sign-off | `findings.md` verdict |
 | sections | `sections/` + `ledger.md` | the drafted manuscript, assembled from a claim→evidence ledger | (the paper *is* the roll-up of findings) |
 
@@ -61,8 +61,9 @@ be revisited as hypotheses resolve; the decision is gated on the whole.
    + a simplest floor). The closest-prior-work paragraph and the isolating
    ablation guard against overclaimed novelty.
 3. **Outline / plan — delegated.** Structuring the manuscript is **engineering**,
-   so hand it to `superpowers` (brainstorming → writing-plans) exactly as
-   `hypothesis-testing` delegates `design.md`/`plan.md`. Store the resulting
+   so hand it to the bound engineering backend (its `design` → `plan`
+   capabilities) exactly as `hypothesis-testing` delegates `design.md`/`plan.md`.
+   Store the resulting
    `outline.md` / `plan.md` under `docs/research/<paper>/paper/`. This skill owns
    the *scientific* framing; it does not reimplement engineering planning.
 4. **Decision.** When the evidence and positioning are in, draft `decision.md` as
@@ -128,9 +129,9 @@ from `rr-a91f` / `rr-7c02`; the author never types them.
 - **Feeds from:** `paper-exploration` (the promoted pitch) and the paper's
   resolved hypotheses (`hypothesis-testing` `findings.md` verdicts + their
   run-refs).
-- **Calls:** `literature position --level paper` for `positioning.md`;
-  `superpowers` brainstorming/writing-plans for `outline.md`/`plan.md`; the
-  experiment backend's `tables` / `evidence` / `is-current` capabilities for
+- **Calls:** `literature position --level paper` for `positioning.md`; the bound
+  engineering backend's `design` / `plan` capabilities for `outline.md`/`plan.md`;
+  the experiment backend's `tables` / `evidence` / `is-current` capabilities for
   result blocks and staleness.
 - **Grilled by:** `grill` (`../grill/SKILL.md`), whose `paper-synthesis` preset
   targets **positioning** (novelty vs. prior work) and **cited-work** (do the

@@ -19,7 +19,8 @@ status:
 <!-- THE SCIENCE, BEFORE ANY ENGINEERING. Settle everything here before design.md
      / plan.md. Letting the results choose the test is exactly what invalidates a
      confirmatory claim. `grill --target strategy` fires at the end of this doc;
-     resolve surfaced gaps before delegating engineering to superpowers. -->
+     resolve surfaced gaps before delegating engineering to the bound engineering
+     backend. -->
 
 ## Decisive comparison
 

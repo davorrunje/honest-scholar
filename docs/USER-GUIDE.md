@@ -14,9 +14,9 @@ under [`docs/design/`](design/); this guide is the *how*.
 
 `scholar` is a Claude Code plugin for the **scientific** side of research — idea →
 literature → hypothesis → test → publish-decision → paper → (optional) thesis. It
-is the counterpart to `superpowers`, which handles the *engineering* (design,
-plans, code); `scholar` calls out to `superpowers` for all of that rather than
-reimplementing it.
+delegates the *engineering* (design, plans, code) to the bound **engineering
+backend** via the engineering-delegation contract; `scholar` calls out to that
+backend for all of that rather than reimplementing it.
 
 Everything you do sits under two rules. They are not decoration — they change how
 the skills behave at every step:
@@ -155,10 +155,10 @@ documents, in order, under `docs/research/<paper>/hypotheses/<slug>/`:
    adversarial "would a reviewer say this is already known?" check, and declares
    the datasets it needs. **`grill` fires here** on the strategy — expect to
    defend your assumptions and falsifiers before moving on.
-3. **`design.md` / `plan.md`** — *the engineering, delegated to `superpowers`*
-   (`brainstorming → writing-plans`). scholar stores the results here but does
-   not design experiments or write code itself. Executing the plan produces the
-   runs.
+3. **`design.md` / `plan.md`** — *the engineering, delegated to the bound
+   engineering backend* (its `design` → `plan` capabilities). scholar stores the
+   results here but does not design experiments or write code itself. Executing
+   the plan produces the runs.
 4. **`findings.md`** — *the verdict:* `confirmed | refuted | inconclusive`, tied
    to the strategy's decision rule. Results are cited as backend **run-refs**,
    never hand-typed numbers. Before you sign, the **guardrail grill fires**: it

@@ -13,7 +13,7 @@ Migrates to the plugin's `decisions/` alongside `resources/references/`.
 | ADR | Decision | Status |
 |---|---|---|
 | [0001](0001-separate-plugin-repo.md) | Package the workflow as a standalone plugin, not in-mononet | accepted |
-| [0002](0002-scientific-scope-only.md) | Scientific scope only; engineering delegated to `superpowers` | accepted |
+| [0002](0002-scientific-scope-only.md) | Scientific scope only; engineering delegated via a contract | accepted |
 | [0003](0003-agency-principle.md) | Agency principle — assistants, not researchers | accepted |
 | [0004](0004-understanding-principle-and-grill.md) | Understanding principle + the `grill` skill | accepted |
 | [0005](0005-three-level-mirror.md) | Three-level mirror; thesis as a partial mirror | accepted |
@@ -34,5 +34,6 @@ Migrates to the plugin's `decisions/` alongside `resources/references/`.
 | [0020](0020-bib-format-csl-json.md) | CSL-JSON source of truth; BibTeX exported on demand | accepted |
 | [0021](0021-thesis-gate-per-gap-confirmation.md) | Thesis gate — per-gap acknowledged confirmation | accepted |
 | [0022](0022-license-apache-2.0.md) | License the plugin under Apache-2.0 | accepted |
+| [0023](0023-engineering-delegation-contract.md) | Delegate engineering via a contract, not a named tool | accepted |
 
 Format: MADR (Markdown Any Decision Records). Deciders: Davor Runje (with Claude).

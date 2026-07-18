@@ -139,9 +139,10 @@ cannot classify with confidence is surfaced as an open question, not decided.
   [`paper-synthesis`](../paper-synthesis/SKILL.md)). In `adopt`, the mapping
   steps above call those same verbs so backfilled items enter through the normal
   front door.
-- **Delegates all engineering to `superpowers`** — design, planning,
-  implementation, and test authoring for the experiment-backend harness are not
-  this skill's job; it only *binds* the harness in config.
+- **Delegates all engineering to the bound engineering backend** (via the
+  engineering-delegation contract) — design, planning, implementation, and test
+  authoring for the experiment-backend harness are not this skill's job; it only
+  *binds* the harness in config.
 - **Regenerates** `dashboard.md` via `progress dashboard` once the registries
   hold content — never hand-edit it.
 

@@ -140,8 +140,8 @@ acknowledge *each* surfaced gap in writing before proceeding.
   `last-updated`) and rolls it into `dashboard.md` as a pure projection. Thesis
   status = uncovered-aims list + through-line-stated flag + milestone state, never
   a score.
-- **`superpowers`** — thesis prose is authored, not engineered; there is no
-  engineering delegation at this level (unlike a paper's outline/plan).
+- **The engineering backend** — thesis prose is authored, not engineered, so
+  there is nothing to delegate at this level (unlike a paper's outline/plan).
 
 ## Guardrails
 

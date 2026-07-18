@@ -17,7 +17,7 @@ you add, not in prose the template ships with.
 |---|---|---|
 | `hypothesis/hypothesis.md` | `hypothesis-testing` · claim | `docs/research/<paper>/hypotheses/<YYYY-MM-DD-slug>/hypothesis.md` |
 | `hypothesis/strategy.md` | `hypothesis-testing` · strategy (rigor kit + grill) | `.../<slug>/strategy.md` |
-| `hypothesis/design-plan-README.md` | *pointer only* — design/plan are **delegated to `superpowers`** | `.../<slug>/{design,plan}.md` |
+| `hypothesis/design-plan-README.md` | *pointer only* — design/plan are **delegated to the bound engineering backend** | `.../<slug>/{design,plan}.md` |
 | `hypothesis/findings.md` | `hypothesis-testing` · findings (**material decision**) | `.../<slug>/findings.md` |
 | `paper/pitch.md` | `paper-synthesis` · pitch | `docs/research/<paper>/paper/pitch.md` |
 | `paper/positioning.md` | `paper-synthesis` · positioning | `.../paper/positioning.md` |
@@ -28,8 +28,9 @@ you add, not in prose the template ships with.
 | `thesis/milestones.yml` | `thesis` · framing (configurable program gates) | `docs/research/thesis/milestones.yml` |
 
 Design/plan (hypothesis) and outline/plan (paper) are **engineering**, delegated to
-`superpowers` (`brainstorming → writing-plans`); `scholar` ships no templates for
-them. See `hypothesis/design-plan-README.md`.
+the bound engineering backend via the engineering-delegation contract (its
+`design` → `plan` capabilities); `scholar` ships no templates for them. See
+`hypothesis/design-plan-README.md`.
 
 ## Status-frontmatter convention
 
