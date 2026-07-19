@@ -4,7 +4,7 @@
 
 <!-- honest-scholar user guide -->
 
-# Honest Scholar — User Guide
+# User Guide
 
 A hands-on guide for a researcher meeting `honest-scholar` for the first time. It walks
 you from install to a signed finding to a submitted paper, using one running
