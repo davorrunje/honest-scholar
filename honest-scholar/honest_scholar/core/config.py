@@ -20,13 +20,18 @@ def load_config(path: str | Path = DEFAULT_CONFIG_PATH) -> dict[str, Any]:
     :param path: Path to the config file; defaults to ``.honest-scholar/config.yml``.
     :returns: The parsed configuration mapping (empty if the file is absent or
         blank).
-    :raises ValueError: If the file exists but does not contain a YAML mapping.
+    :raises ValueError: If the file exists but is not valid YAML, or does not
+        contain a YAML mapping.
     """
     config_path = Path(path)
     if not config_path.is_file():
         return {}
     with config_path.open(encoding="utf-8") as handle:
-        data = yaml.safe_load(handle)
+        try:
+            data = yaml.safe_load(handle)
+        except yaml.YAMLError as exc:
+            msg = f"{config_path}: invalid YAML: {exc}"
+            raise ValueError(msg) from exc
     if data is None:
         return {}
     if not isinstance(data, dict):

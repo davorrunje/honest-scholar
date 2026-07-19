@@ -196,6 +196,28 @@ def _opt_bool(value: Any) -> bool | None:
     return value if isinstance(value, bool) else None
 
 
+def _int_or_error(value: Any, where: str, fieldname: str) -> int | None:
+    """Coerce an optional integer field, raising :class:`ManifestError`.
+
+    Accepts real ints and numeric strings (``int(value)``); ``None`` passes
+    through. A non-numeric value is a clean error rather than a silent drop.
+
+    :param value: The raw value to coerce.
+    :param where: Location prefix for the error message.
+    :param fieldname: The field name to name in the error message.
+    :returns: The coerced integer, or ``None`` when `value` is ``None``.
+    :raises ManifestError: If `value` is non-``None`` and not integer-coercible.
+    """
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (ValueError, TypeError) as exc:
+        raise ManifestError(
+            f"{where}: '{fieldname}' must be an integer, got {value!r}"
+        ) from exc
+
+
 def _decode_file_ref(raw: Any, where: str) -> FileRef:
     """Decode one ``files[]`` element, raising :class:`ManifestError` on shape."""
     if not isinstance(raw, dict):
@@ -205,14 +227,9 @@ def _decode_file_ref(raw: Any, where: str) -> FileRef:
         sha256 = str(raw["sha256"])
     except KeyError as exc:
         raise ManifestError(f"{where}: file missing required key {exc}") from exc
-    size = raw.get("size")
-    try:
-        size_int = int(size) if size is not None else None
-    except (ValueError, TypeError) as exc:
-        raise ManifestError(
-            f"{where}: 'size' must be an integer, got {size!r}"
-        ) from exc
-    return FileRef(path=path, sha256=sha256, size=size_int)
+    return FileRef(
+        path=path, sha256=sha256, size=_int_or_error(raw.get("size"), where, "size")
+    )
 
 
 def _decode_retrieval(raw: Any, where: str) -> Retrieval:
@@ -230,12 +247,7 @@ def _decode_citation(raw: Any, where: str) -> Citation:
     if not isinstance(raw, dict):
         raise ManifestError(f"{where}: 'citation' must be a mapping")
     year = raw.get("publicationYear", raw.get("publication_year"))
-    try:
-        year_int = int(year) if year is not None else None
-    except (ValueError, TypeError) as exc:
-        raise ManifestError(
-            f"{where}: 'publicationYear' must be an integer, got {year!r}"
-        ) from exc
+    year_int = _int_or_error(year, where, "publicationYear")
     return Citation(
         identifier=_opt_str(raw.get("identifier")),
         creator=_opt_str(raw.get("creator")),
@@ -515,7 +527,10 @@ def entry_from_croissant(json_ld: dict[str, Any]) -> DatasetEntry:
 
     :param json_ld: A parsed Croissant / schema.org ``Dataset`` document.
     :returns: A partial :class:`DatasetEntry` draft.
-    :raises ManifestError: If the document has no usable ``name``.
+    :raises ManifestError: If the document has no usable ``name``, or a
+        ``distribution`` entry is a malformed ``FileObject`` (not a mapping, or
+        missing ``contentUrl`` / ``sha256``). A malformed file is surfaced, never
+        silently dropped — "no distribution" is distinct from "a bad file".
     """
     name = json_ld.get("name")
     if not name:
@@ -526,20 +541,23 @@ def entry_from_croissant(json_ld: dict[str, Any]) -> DatasetEntry:
     title = str(name) if str(name) != entry_id else None
 
     files: list[FileRef] = []
-    for obj in json_ld.get("distribution") or []:
+    for i, obj in enumerate(json_ld.get("distribution") or []):
+        loc = f"croissant: distribution[{i}]"
         if not isinstance(obj, dict):
-            continue
+            raise ManifestError(f"{loc}: FileObject must be a mapping")
         url = obj.get("contentUrl")
         sha = obj.get("sha256")
-        if url and sha:
-            size = obj.get("contentSize")
-            files.append(
-                FileRef(
-                    path=str(url),
-                    sha256=str(sha),
-                    size=size if isinstance(size, int) else None,
-                )
+        if not url or not sha:
+            raise ManifestError(
+                f"{loc}: FileObject missing 'contentUrl' and/or 'sha256'"
             )
+        files.append(
+            FileRef(
+                path=str(url),
+                sha256=str(sha),
+                size=_int_or_error(obj.get("contentSize"), loc, "contentSize"),
+            )
+        )
 
     return DatasetEntry(
         id=entry_id,

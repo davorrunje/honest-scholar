@@ -270,10 +270,30 @@ def test_split_cells_without_borders() -> None:
     assert b._split_cells("a | b | c") == ["a", "b", "c"]
 
 
-def test_loads_short_row_pads() -> None:
+def test_loads_ragged_row_raises() -> None:
+    # A short row would silently pad required columns (id/status/provenance).
     text = "| id | one-line | status |\n|---|---|---|\n| h1 |\n"
-    board = b.Backlog.loads(text, "hypothesis")
-    assert board.rows[0]["one-line"] == ""
+    with pytest.raises(b.BacklogError, match="ragged backlog row"):
+        b.Backlog.loads(text, "hypothesis")
+
+
+def test_loads_over_wide_row_raises() -> None:
+    text = "| id | status |\n|---|---|\n| h1 | parked | extra |\n"
+    with pytest.raises(b.BacklogError, match="ragged backlog row"):
+        b.Backlog.loads(text, "hypothesis")
+
+
+def test_loads_malformed_table_without_separator_raises() -> None:
+    # Table-like rows with no GFM separator must not read as a genuinely empty
+    # backlog (which would be indistinguishable from a real one).
+    text = "| id | one-line | status |\n| h1 | an idea | parked |\n"
+    with pytest.raises(b.BacklogError, match="malformed backlog table"):
+        b.Backlog.loads(text, "hypothesis")
+
+
+def test_loads_blank_document_is_empty_not_malformed() -> None:
+    assert b.Backlog.loads("", "hypothesis").rows == []
+    assert b.Backlog.loads("just prose, no table\n", "hypothesis").rows == []
 
 
 def test_get_second_row() -> None:
@@ -283,11 +303,13 @@ def test_get_second_row() -> None:
     assert board.get("z")["one-line"] == "second"
 
 
-def test_rank_ignores_foreign_score() -> None:
+def test_rank_rejects_foreign_score() -> None:
     board = b.Backlog(level="paper")  # paper level has no EIG column
     board.add("p", "own", row_id="p1")
-    board.rank("p1", EIG="high", feas="med")
-    assert "EIG" not in board.get("p1")
+    # A level-mismatched score must not vanish silently while the row is ranked.
+    with pytest.raises(b.BacklogError, match="unknown score key"):
+        board.rank("p1", EIG="high", feas="med")
+    assert board.get("p1")["status"] == "candidate"  # transition did not happen
 
 
 def test_append_registry_without_trailing_newline(tmp_path: Path) -> None:

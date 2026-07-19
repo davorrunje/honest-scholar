@@ -131,6 +131,12 @@ def _lit_client() -> HttpClient:
         typer.echo(f"invalid .honest-scholar/config.yml: {exc}", err=True)
         raise typer.Exit(code=1) from exc
     lit = config.get("literature")
+    if lit is not None and not isinstance(lit, dict):
+        typer.echo(
+            "invalid .honest-scholar/config.yml: 'literature' must be a mapping",
+            err=True,
+        )
+        raise typer.Exit(code=1)
     mailto = lit.get("mailto") if isinstance(lit, dict) else None
     return HttpClient(
         cache_dir=Path(".honest-scholar/cache/http"),
@@ -575,12 +581,14 @@ def record(
     :raises typer.Exit: Code 1 on a guard violation or malformed artifact.
     """
     gap_list = [g.strip() for g in gaps.split("||") if g.strip()]
-    transcript_text: str | None = None
-    if transcript == "-":
-        transcript_text = sys.stdin.read()
-    elif transcript:
-        transcript_text = Path(transcript).read_text(encoding="utf-8")
     try:
+        transcript_text: str | None = None
+        if transcript == "-":
+            transcript_text = sys.stdin.read()
+        elif transcript:
+            # Inside the try so an unreadable transcript exits 1 cleanly rather
+            # than tracebacking (it is an ``OSError`` like the other read paths).
+            transcript_text = Path(transcript).read_text(encoding="utf-8")
         result = record_mod.record(
             artifact,
             target,

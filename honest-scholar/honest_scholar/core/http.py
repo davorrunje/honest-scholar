@@ -118,7 +118,12 @@ class HttpClient:
             return None
         path = self.cache_dir / f"{key}.json"
         if path.is_file():
-            data: JsonValue = json.loads(path.read_text(encoding="utf-8"))
+            try:
+                data: JsonValue = json.loads(path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                # A truncated/corrupt entry (e.g. an interrupted ``_store``) is
+                # treated as a cache miss and re-fetched, never a raw traceback.
+                return None
             return data
         return None
 
@@ -126,7 +131,12 @@ class HttpClient:
         if self.cache_dir is None:
             return
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        (self.cache_dir / f"{key}.json").write_text(json.dumps(value), encoding="utf-8")
+        # Write to a temp file then atomically rename, so an interruption can
+        # never leave a half-written (corrupt) cache entry behind.
+        path = self.cache_dir / f"{key}.json"
+        tmp = self.cache_dir / f"{key}.json.tmp"
+        tmp.write_text(json.dumps(value), encoding="utf-8")
+        tmp.replace(path)
 
     def get_json(
         self,

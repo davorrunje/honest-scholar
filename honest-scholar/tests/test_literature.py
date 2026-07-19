@@ -109,6 +109,21 @@ def test_http_cache_avoids_second_call(tmp_path: Any) -> None:
     assert len(session.calls) == 1  # second served from cache
 
 
+def test_http_corrupt_cache_is_refetched_not_traceback(tmp_path: Any) -> None:
+    session = FakeSession({"https://x": {"n": 1}})
+    client = http.HttpClient(session=session, cache_dir=tmp_path, sleep=lambda _s: None)
+    key = http._cache_key("https://x", {})
+    (tmp_path / f"{key}.json").write_text("{ not valid json", encoding="utf-8")
+    # A corrupt entry (e.g. an interrupted store) is a cache miss, not a crash.
+    assert client.get_json("https://x") == {"n": 1}
+    assert len(session.calls) == 1
+    # The re-fetch atomically overwrote it: a second call hits the repaired cache
+    # and no temp file is left behind.
+    assert client.get_json("https://x") == {"n": 1}
+    assert len(session.calls) == 1
+    assert not (tmp_path / f"{key}.json.tmp").exists()
+
+
 # --- graph ------------------------------------------------------------------
 
 
@@ -183,6 +198,19 @@ def test_cites_respects_max() -> None:
 def test_refs_reads_referenced_works() -> None:
     client = _client({"https://api.openalex.org/works/W1": _WORK})
     assert graph.refs("W1", client=client) == ["W9", "W8"]
+
+
+def test_fetch_work_non_dict_raises() -> None:
+    # A non-dict 200 body must not be coerced to a hollow {} work.
+    client = _client({"https://api.openalex.org/works/W1": ["not-a-dict"]})
+    with pytest.raises(http.HttpError, match="not an OpenAlex work"):
+        graph.refs("W1", client=client)
+
+
+def test_fetch_work_idless_body_raises() -> None:
+    client = _client({"https://api.openalex.org/works/W1": {}})  # dict but no 'id'
+    with pytest.raises(http.HttpError, match="not an OpenAlex work"):
+        graph.refs("W1", client=client)
 
 
 def test_enrich_with_context_degrades_without_key() -> None:
@@ -267,9 +295,21 @@ def test_resolve_empty_body_is_miss() -> None:
     assert graph.resolve("W1", client=client)["resolved"] is False
 
 
-def test_cites_non_dict_page_stops() -> None:
+def test_cites_non_dict_first_page_raises() -> None:
     client = _client({"https://api.openalex.org/works": ["not-a-dict"]})
-    assert graph.cites("W1", client=client) == []
+    with pytest.raises(http.HttpError, match="not a JSON object"):
+        graph.cites("W1", client=client)
+
+
+def test_cites_non_dict_page_mid_pagination_raises() -> None:
+    # A truncated frontier must never be returned as if complete.
+    page1 = {
+        "results": [{"id": "https://openalex.org/W2"}],
+        "meta": {"next_cursor": "c2"},
+    }
+    client = _client({"https://api.openalex.org/works": [page1, "not-a-dict"]})
+    with pytest.raises(http.HttpError, match="not a JSON object"):
+        graph.cites("W1", client=client)
 
 
 def test_enrich_without_context() -> None:
@@ -747,3 +787,17 @@ def test_cli_generic_http_error_exits_1_cleanly(
     assert not isinstance(result.exception, http.HttpError)  # no traceback
     assert "literature request failed" in result.stderr
     assert "403" in result.stderr
+
+
+def test_lit_client_rejects_non_dict_literature_block(
+    tmp_path: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    cfg = tmp_path / ".honest-scholar"
+    cfg.mkdir()
+    # A present-but-non-dict `literature:` block is a config error, not silently
+    # discarded (which would drop `mailto` without a word).
+    (cfg / "config.yml").write_text("literature: just-a-string\n", encoding="utf-8")
+    with pytest.raises(typer.Exit) as exc:
+        cli._lit_client()
+    assert exc.value.exit_code == 1

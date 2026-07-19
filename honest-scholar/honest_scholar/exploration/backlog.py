@@ -122,13 +122,20 @@ class Backlog:
         :param text: The markdown document (may contain prose around the table).
         :param level: The backlog level.
         :returns: The parsed backlog.
+        :raises BacklogError: If table-like content is present but never anchored
+            by a GFM separator (a malformed table is not a genuinely empty one),
+            or a data row's cell count does not match the header (a ragged row
+            would otherwise silently pad/drop required columns).
         """
         header: list[str] | None = None
         rows: list[Row] = []
         candidate: list[str] | None = None
+        pending = 0  # consecutive unconfirmed pipe rows (a table shape sans separator)
+        saw_table_shape = False
         for line in text.splitlines():
             if "|" not in line:
                 candidate = None  # prose breaks a pending header candidate
+                pending = 0
                 continue
             cells = _split_cells(line)
             if _is_separator(cells):
@@ -137,15 +144,24 @@ class Backlog:
                 if header is None and candidate is not None:
                     header = candidate
                     candidate = None
+                    pending = 0
                 continue
             if header is None:
                 candidate = cells  # a header only if a separator follows it
+                pending += 1
+                if pending >= 2:  # header + row(s) shape with no separator between
+                    saw_table_shape = True
                 continue
-            rows.append(
-                {
-                    header[i]: (cells[i] if i < len(cells) else "")
-                    for i in range(len(header))
-                }
+            if len(cells) != len(header):
+                raise BacklogError(
+                    f"ragged backlog row: {len(cells)} cells, header has "
+                    f"{len(header)} ({cells!r})"
+                )
+            rows.append({header[i]: cells[i] for i in range(len(header))})
+        if header is None and saw_table_shape:
+            raise BacklogError(
+                "malformed backlog table: table-like rows with no GFM '|---|' "
+                "separator to anchor a header"
             )
         return cls(level=level, rows=rows)
 
@@ -245,9 +261,12 @@ class Backlog:
 
         :param row_id: The row to rank.
         :param scores: Column→value scores (e.g. ``feas``, ``interest``, ``EIG``,
-            ``frame``); unknown columns for this level are ignored.
+            ``frame``). A score key not in this level's columns is a hard error,
+            never silently dropped — a mistyped or level-mismatched score must
+            not vanish while the row is still marked ``ranked``.
         :returns: The updated row.
-        :raises BacklogError: If the row's status is not ``candidate``/``parked``.
+        :raises BacklogError: If the row's status is not ``candidate``/``parked``,
+            or a score key is not a column of this level.
         """
         row = self.get(row_id)
         if row.get("status") not in _RANK_SOURCES:
@@ -255,9 +274,14 @@ class Backlog:
                 f"cannot rank {row_id!r} from status {row.get('status')!r} "
                 f"(must be one of {sorted(_RANK_SOURCES)})"
             )
+        unknown = [key for key in scores if key not in self.columns]
+        if unknown:
+            raise BacklogError(
+                f"unknown score key(s) {sorted(unknown)} for level {self.level!r} "
+                f"(columns: {self.columns})"
+            )
         for key, value in scores.items():
-            if key in self.columns:
-                row[key] = value
+            row[key] = value
         row["status"] = "ranked"
         return row
 

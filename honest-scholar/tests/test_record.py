@@ -290,6 +290,27 @@ def test_cli_record_transcript_from_stdin(tmp_path: Path) -> None:
     assert (tmp_path / "log").exists()
 
 
+def test_cli_record_unreadable_transcript_exits_1_cleanly(tmp_path: Path) -> None:
+    artifact = _artifact(tmp_path)
+    result = runner.invoke(
+        app,
+        [
+            "defend",
+            "record",
+            "--artifact",
+            str(artifact),
+            "--target",
+            "methodology",
+            "--transcript",
+            str(tmp_path / "missing.md"),  # unreadable transcript
+            "--log-dir",
+            str(tmp_path / "log"),
+        ],
+    )
+    assert result.exit_code == 1  # clean exit, not a traceback
+    assert "defend record failed" in result.stderr
+
+
 def test_patch_blank_line_and_trailing_top_key() -> None:
     text = (
         "---\nstatus:\n\n  understanding: {status: pending, unresolved: []}\n"
