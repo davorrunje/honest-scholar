@@ -36,3 +36,11 @@ def test_non_mapping_raises(tmp_path: Path) -> None:
     path.write_text("- just\n- a\n- list\n", encoding="utf-8")
     with pytest.raises(ValueError, match="expected a YAML mapping"):
         load_config(path)
+
+
+def test_malformed_yaml_is_clean_value_error(tmp_path: Path) -> None:
+    path = tmp_path / "config.yml"
+    # Unbalanced flow sequence — a YAMLError, surfaced as a clean ValueError.
+    path.write_text("literature: [unclosed\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="invalid YAML"):
+        load_config(path)

@@ -152,8 +152,17 @@ def _blob_path(cache_dir: Path, sha256: str) -> Path:
 
 
 def _verified(path: Path, sha256: str) -> bool:
-    """Return whether `path` exists and its SHA-256 matches (else it is absent)."""
-    return path.is_file() and sha256_file(path) == _bare(sha256)
+    """Return whether `path` exists and its SHA-256 matches (else it is absent).
+
+    A present-but-unreadable file (``OSError`` while hashing) is treated as
+    absent, so the resolution chain moves on instead of crashing.
+    """
+    if not path.is_file():
+        return False
+    try:
+        return sha256_file(path) == _bare(sha256)
+    except OSError:
+        return False
 
 
 def _resolve_file(
@@ -262,7 +271,9 @@ def verify(entry: DatasetEntry, *, cache_dir: str | Path) -> VerifyReport:
 
     :param entry: The dataset entry to verify.
     :param cache_dir: The content-addressed cache directory.
-    :returns: A per-file verification report.
+    :returns: A per-file verification report. A present-but-unreadable file
+        (``OSError`` while hashing) is folded into ``corrupt`` rather than
+        crashing the offline report.
     """
     cache = Path(cache_dir)
     report = VerifyReport(entry_id=entry.id)
@@ -270,7 +281,13 @@ def verify(entry: DatasetEntry, *, cache_dir: str | Path) -> VerifyReport:
         path = Path(ref.path) if entry.tier == "A" else _blob_path(cache, ref.sha256)
         if not path.is_file():
             report.missing.append(ref.path)
-        elif sha256_file(path) == _bare(ref.sha256):
+            continue
+        try:
+            digest = sha256_file(path)
+        except OSError:
+            report.corrupt.append(ref.path)
+            continue
+        if digest == _bare(ref.sha256):
             report.verified.append(ref.path)
         else:
             report.corrupt.append(ref.path)

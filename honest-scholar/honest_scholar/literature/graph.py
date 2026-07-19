@@ -117,9 +117,18 @@ def enrich_work(work: dict[str, Any]) -> dict[str, Any]:
 
 
 def _fetch_work(client: HttpClient, openalex_id: str) -> dict[str, Any]:
-    """Fetch one OpenAlex work by its ``W…`` id."""
-    data = client.get_json(f"{OPENALEX}/works/{openalex_id}")
-    return data if isinstance(data, dict) else {}
+    """Fetch one OpenAlex work by its ``W…`` id.
+
+    :raises HttpError: If the 200 body is not a work object (non-dict or no
+        ``id``); a hollow ``{}`` is never returned in its place.
+    """
+    from honest_scholar.core.http import HttpError
+
+    url = f"{OPENALEX}/works/{openalex_id}"
+    data = client.get_json(url)
+    if not isinstance(data, dict) or not data.get("id"):
+        raise HttpError(f"{url}: response is not an OpenAlex work object")
+    return data
 
 
 def _arxiv_doi(arxiv_id: str) -> str:
@@ -224,7 +233,12 @@ def cites(
     :param client: The HTTP client.
     :param max_results: Cap on rows returned (all citations if ``None``).
     :returns: One record per citing work with provenance ``{via: "openalex"}``.
+    :raises HttpError: If a page mid-pagination is not a JSON object. Stopping
+        silently here would return a truncated frontier as if complete, so it is
+        a hard error (mirroring :meth:`HttpClient.get_json`'s non-JSON path).
     """
+    from honest_scholar.core.http import HttpError
+
     results: list[dict[str, Any]] = []
     cursor: str | None = "*"
     while cursor:
@@ -233,7 +247,7 @@ def cites(
             {"filter": f"cites:{openalex_id}", "per-page": "200", "cursor": cursor},
         )
         if not isinstance(page, dict):
-            break
+            raise HttpError(f"{OPENALEX}/works: citation page is not a JSON object")
         for work in page.get("results", []):
             record = enrich_work(work)
             record["provenance"] = {"source_id": openalex_id, "via": "openalex"}
@@ -434,6 +448,9 @@ def neighbors(
         raise ValueError(f"unknown kind {kind!r} (want cocite | couple | both)")
     out: dict[str, Any] = {}
     citers = cites(openalex_id, client=client, max_results=frontier)
+    # ``cites`` now either paginates to completion or raises on a bad page, so a
+    # short list genuinely means the frontier was exhausted; hitting the cap is
+    # the only way to be incomplete, and that is what ``capped`` reports.
     out["capped"] = len(citers) >= frontier
     if kind in ("cocite", "both"):
         out["cocitation"] = _cocitation(openalex_id, citers, client, top)

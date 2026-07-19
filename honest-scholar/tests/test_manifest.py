@@ -343,14 +343,12 @@ def test_validate_incomplete_citation_warns() -> None:
     assert any("citation" in w for w in report.warnings)
 
 
-def test_entry_from_croissant_mixed_distribution() -> None:
+def test_entry_from_croissant_valid_distribution() -> None:
     draft = m.entry_from_croissant(
         {
             "name": "x",
             "citeAs": "Author (2020). X.",
             "distribution": [
-                "not-a-dict",
-                {"contentUrl": "u1"},  # missing sha256 -> skipped
                 {"contentUrl": "u2", "sha256": _HEX, "contentSize": 5},
             ],
         }
@@ -358,6 +356,44 @@ def test_entry_from_croissant_mixed_distribution() -> None:
     assert [f.path for f in draft.files] == ["u2"]
     assert draft.files[0].size == 5
     assert draft.citation is not None
+
+
+def test_entry_from_croissant_non_dict_file_object_raises() -> None:
+    with pytest.raises(m.ManifestError, match=r"distribution\[0\].*must be a mapping"):
+        m.entry_from_croissant({"name": "x", "distribution": ["not-a-dict"]})
+
+
+def test_entry_from_croissant_file_object_missing_sha_raises() -> None:
+    # A malformed FileObject is surfaced, not silently dropped.
+    with pytest.raises(m.ManifestError, match=r"distribution\[0\].*contentUrl"):
+        m.entry_from_croissant({"name": "x", "distribution": [{"contentUrl": "u1"}]})
+
+
+def test_entry_from_croissant_file_object_missing_url_raises() -> None:
+    with pytest.raises(m.ManifestError, match=r"distribution\[0\]"):
+        m.entry_from_croissant({"name": "x", "distribution": [{"sha256": _HEX}]})
+
+
+def test_entry_from_croissant_numeric_string_content_size_accepted() -> None:
+    draft = m.entry_from_croissant(
+        {
+            "name": "x",
+            "distribution": [{"contentUrl": "u", "sha256": _HEX, "contentSize": "42"}],
+        }
+    )
+    assert draft.files[0].size == 42
+
+
+def test_entry_from_croissant_non_numeric_content_size_raises() -> None:
+    with pytest.raises(m.ManifestError, match="'contentSize' must be an integer"):
+        m.entry_from_croissant(
+            {
+                "name": "x",
+                "distribution": [
+                    {"contentUrl": "u", "sha256": _HEX, "contentSize": "big"}
+                ],
+            }
+        )
 
 
 def test_croissant_minimal_entry_omits_absent_fields() -> None:

@@ -94,6 +94,37 @@ def test_verify_flags_missing_and_corrupt(tmp_path: Path) -> None:
     assert r.verify(entry, cache_dir=cache).corrupt == ["data/f.bin"]
 
 
+def test_verify_unreadable_file_is_corrupt_not_crash(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    cache = tmp_path / "cache"
+    _write(cache / "sha256" / ("a" * 64))  # a present-but-(soon)-unreadable blob
+    entry = _entry("B", "a" * 64, retrieval=m.Retrieval(kind="http", url="https://x"))
+
+    def _boom(_p: object, **_kw: object) -> str:
+        raise PermissionError("unreadable")
+
+    monkeypatch.setattr(r, "sha256_file", _boom)
+    report = r.verify(entry, cache_dir=cache)
+    assert report.corrupt == ["data/f.bin"]  # folded into corrupt, no traceback
+    assert not report.ok
+
+
+def test_verified_unreadable_present_file_treated_as_absent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    _write(Path("data/f.bin"))
+
+    def _boom(_p: object, **_kw: object) -> str:
+        raise PermissionError("unreadable")
+
+    monkeypatch.setattr(r, "sha256_file", _boom)
+    # An unreadable Tier-A file is absent to the chain, which then fails cleanly.
+    with pytest.raises(r.RetrievalError, match="missing or corrupt"):
+        r.fetch(_entry("A", "a" * 64), cache_dir="cache")
+
+
 # --- fetch chain ------------------------------------------------------------
 
 
