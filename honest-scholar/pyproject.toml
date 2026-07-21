@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "honest-scholar"
-version = "0.1.0"
+version = "0.1.1"
 description = "honest-scholar — a CLI for honest, defensible AI-assisted research (tooling for the honest-scholar plugin)"
 authors = [{ name = "Davor Runje", email = "davor@synthpop.ai" }]
 maintainers = [{ name = "Davor Runje", email = "davor@synthpop.ai" }]
@@ -31,7 +31,7 @@ dependencies = [
 
 [project.urls]
 Homepage      = "https://honest-scholar.science/"
-Documentation = "https://honest-scholar.science/"
+Documentation = "https://honest-scholar.science/get-started/user-guide"
 Repository    = "https://github.com/davorrunje/honest-scholar"
 Issues        = "https://github.com/davorrunje/honest-scholar/issues"
 Changelog     = "https://github.com/davorrunje/honest-scholar/blob/main/CHANGELOG.md"
