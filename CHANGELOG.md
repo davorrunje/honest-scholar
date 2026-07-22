@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-07-21
+
+Package patch (metadata + docs). The plugin is unchanged (still `0.1.0`).
+
+### Fixed
+
+- PyPI project links: `Documentation` now points to a distinct URL
+  (`honest-scholar.science/get-started/user-guide`) so it renders separately from
+  `Homepage` (both previously pointed at the same URL, which PyPI collapsed).
+
+### Changed
+
+- Package README describes the honest failure handling (retry + `Retry-After`,
+  distinct actionable errors, never a silent miss or a traceback) instead of the
+  vague "degrade gracefully".
+
 ## [0.1.0] - 2026-07-19
 
 First public release — a Claude Code plugin for the scientific research workflow,
